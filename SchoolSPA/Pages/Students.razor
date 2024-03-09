@@ -1,0 +1,47 @@
+﻿@page "/students"
+@inject HttpClient Http
+
+<PageTitle>My Students</PageTitle>
+
+<h1>My Students</h1>
+
+@if (students == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <QuickGrid Items="@students" Pagination="@paginationState">
+        <PropertyColumn Property="@(p=>p.StudentId)" Title="ID" Sortable="true" />
+        <TemplateColumn Title="Name" SortBy="@sortByName" IsDefaultSortColumn="true">
+            <div>@context.FirstName @context.LastName</div>
+        </TemplateColumn>
+        <PropertyColumn Property="@(p=>p.School)" Title="School" Sortable="true" />
+        <TemplateColumn >
+            <div>
+                <a class='btn btn-success btn-sm' href='/updel/@context.StudentId/edit'>Edit</a>
+            </div>
+        </TemplateColumn>
+        <TemplateColumn >
+            <div>
+                <a class='btn btn-danger btn-sm' href='/updel/@context.StudentId/del'>Delete</a>
+            </div>
+        </TemplateColumn>                
+    </QuickGrid>
+    <Paginator State="@paginationState" />
+}
+
+@code {
+    private IQueryable<Student>? students;
+
+    // instantiate a sorting spec
+    GridSort<Student> sortByName = GridSort<Student>.ByAscending(x => x.FirstName).ThenAscending(x => x.LastName);
+
+    PaginationState paginationState = new PaginationState{ ItemsPerPage = 15 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        string URL = $"{Constants.SchoolAPIBase}students";
+        students = (await Http.GetFromJsonAsync<Student[]>(URL))?.AsQueryable();
+    }
+}
